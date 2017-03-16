@@ -1,9 +1,11 @@
 # Redis HA - sentinel + haproxy
+# 首先感谢原作者的指引：https://github.com/falsecz/haredis
 
 - sentinel: autoswitch master/slave
 - haproxy: active check for only master node
 - haproxy api: disable failed nodes to prevent multimaster
 
+### 图中只启用了一个哨兵，而本项目中，在每个redis节点都将启动一个哨兵
 !["diagram"](diagram.png)
 
 without haproxy maintenance mode
@@ -24,7 +26,10 @@ witch haproxy maintenance mode via notification script
   haproxy points only to B
 ```
 
-### Run redis cluster
+### 按以下方法实现，可kill 任意redis节点，无论主备，只要有一台启动，都将推举出master节点
+
+### Run redis cluster 
+### 在三台不同host上执行
 ```
 redis-server --port 6666
 redis-server --port 6667
@@ -32,17 +37,20 @@ redis-server --port 6668
 ```
 
 ### Set slaves
+### 在单台host上执行
 ```
-redis-cli -p 6667 SLAVEOF 127.0.0.1 6666
-redis-cli -p 6668 SLAVEOF 127.0.0.1 6666
+redis-cli -h 10.10.10.186 -p 6667 SLAVEOF 10.10.10.185 6666
+redis-cli -h 10.10.10.106 -p 6668 SLAVEOF 10.10.10.185 6666
 ```
 
 ### Run sentinel
+### 分别在三台host执行，启用哨兵模式
 ```
 redis-server sentinel.conf  --sentinel
 ```
 
 ### Run haproxy
+### 在某台host上运行haproxy
 ```
 haproxy -f haproxy.cfg -db
 ```
@@ -52,7 +60,7 @@ Open http://localhost:8080/ and try kill some redis
 
 ### Notice
 tested on
-- redis 2.8.6
-- haproxy 1.5-dev21
+- redis 3.0.7
+- haproxy 1.5.18
 
 [!] in production on single host you must specify different data dir before SLAVEOF command otherwise you loose data on master
