@@ -29,7 +29,13 @@ witch haproxy maintenance mode via notification script
 ### 按以下方法实现，可kill 任意redis节点，无论主备，只要有一台启动，都将推举出master节点
 
 ### Run redis cluster 
-### 在三台不同host上执行
+### 在三台不同host A, B, C上执行
+### 假设: 
+```
+A: 10.10.10.185
+B: 10.10.10.186
+C: 10.10.10.106
+```
 ```
 redis-server --port 6666
 redis-server --port 6667
@@ -37,25 +43,25 @@ redis-server --port 6668
 ```
 
 ### Set slaves
-### 在单台host上执行
+### 在单台host A上执行
 ```
 redis-cli -h 10.10.10.186 -p 6667 SLAVEOF 10.10.10.185 6666
 redis-cli -h 10.10.10.106 -p 6668 SLAVEOF 10.10.10.185 6666
 ```
 
 ### Run sentinel
-### 分别在三台host执行，启用哨兵模式
+### 分别在三台host A, B, C执行，启用哨兵模式
 ```
 redis-server sentinel.conf  --sentinel
 ```
 
 ### Run haproxy
-### 在某台host上运行haproxy
+### 在某台host A上运行haproxy
 ```
 haproxy -f haproxy.cfg -db
 ```
 
-Open http://localhost:8080/ and try kill some redis
+Open http://10.10.10.185:8080/ and try kill some redis
 
 
 ### Notice
